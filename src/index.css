@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ép nền đen cho toàn bộ trang web để gradient mờ xuống không bị lộ vệt trắng */
+body {
+  background-color: #0F0F0F; /* Mã màu dark trong tailwind.config.js của anh */
+  color: #FFFFFF;
+  margin: 0;
+  padding: 0;
+}
+
+/* Đảm bảo thanh cuộn mượt mà */
+html {
+  scroll-behavior: smooth;
+}
