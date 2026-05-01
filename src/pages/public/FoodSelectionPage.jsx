@@ -1,28 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus, Minus, Popcorn, Loader } from 'lucide-react';
-import { foodApi } from '../../api/foodApi'; // Đảm bảo đường dẫn API đúng
+import { foodApi } from '../../api/foodApi'; // Sửa lại đường dẫn import tương đối cho chuẩn
 
 export default function FoodSelectionPage() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const { selectedSeats = [], seatTotal = 0 } = location.state || {};
+  const { selectedSeats = [], seatTotal = 0, showtimeId, showtimeInfo } = location.state || {};
 
   const [foods, setFoods] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cart, setCart] = useState({}); 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; 
-
-  // ĐÃ TẠM KHÓA CHỨC NĂNG ĐUỔI KHÁCH ĐỂ ANH TEST LINK GÕ TAY:
-  /*
-  useEffect(() => {
-    if (selectedSeats.length === 0) {
-      navigate(-1);
-    }
-  }, [selectedSeats, navigate]);
-  */
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -72,7 +63,7 @@ export default function FoodSelectionPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center text-primary gap-2">
-        <Loader className="animate-spin" /> Đang tải danh sách đồ ăn...
+        <Loader className="animate-spin"/> Đang tải danh sách đồ ăn...
       </div>
     );
   }
@@ -81,8 +72,8 @@ export default function FoodSelectionPage() {
     <div className="bg-dark min-h-screen text-white pb-20 pt-8">
       <div className="container mx-auto px-4">
         
-        <button 
-          onClick={() => navigate(-1)} 
+        <button
+          onClick={() => navigate(-1)}
           className="flex items-center text-gray-400 hover:text-white transition-colors mb-8"
         >
           <ChevronLeft size={20} className="mr-1" /> Quay lại chọn ghế
@@ -92,7 +83,7 @@ export default function FoodSelectionPage() {
           
           <div className="lg:col-span-2 bg-[#1A1A1A] rounded-2xl p-6 md:p-8 border border-gray-800 shadow-2xl flex flex-col h-full">
             <h2 className="text-2xl font-black mb-6 flex items-center gap-2 uppercase tracking-wider">
-              <Popcorn className="text-primary" /> CHỌN ĐỒ ĂN THỨC UỐNG
+              <Popcorn className="text-primary"/> CHỌN ĐỒ ĂN THỨC UỐNG
             </h2>
             
             {safeFoods.length === 0 ? (
@@ -106,11 +97,10 @@ export default function FoodSelectionPage() {
                     const qty = cart[food.id] || 0;
                     return (
                       <div key={food.id} className="bg-[#222] border border-gray-700 rounded-xl p-4 flex items-center gap-4 hover:border-gray-500 transition-all">
-                        {/* Cột này gọi đúng chữ imageUrl như anh em mình đã sửa trước đó */}
                         <img 
                           src={`/image/combofood/${food.imageUrl}`} 
                           alt={food.name} 
-                          onError={(e) => { e.target.src = 'https://placehold.co/150x150/333/FFF?text=No+Image' }} 
+                          onError={(e) => { e.target.src = '[https://placehold.co/150x150/333/FFF?text=No+Image](https://placehold.co/150x150/333/FFF?text=No+Image)' }} 
                           className="w-20 h-20 rounded-lg object-cover bg-black" 
                         />
                         <div className="flex-grow">
@@ -121,16 +111,31 @@ export default function FoodSelectionPage() {
                         
                         <div className="flex flex-col items-center gap-2">
                           {qty > 0 ? (
-                            <div className="flex items-center bg-dark rounded-full border border-primary/50 overflow-hidden">
-                              <button onClick={() => handleUpdateCart(food.id, -1)} className="p-1 hover:bg-primary hover:text-white text-gray-400 transition-colors"><Minus size={16} /></button>
-                              <span className="w-6 text-center text-sm font-bold">{qty}</span>
-                              <button onClick={() => handleUpdateCart(food.id, 1)} className="p-1 hover:bg-primary hover:text-white text-gray-400 transition-colors"><Plus size={16} /></button>
-                            </div>
-                          ) : (
-                            <button onClick={() => handleUpdateCart(food.id, 1)} className="bg-primary/10 text-primary border border-primary/30 px-4 py-2 rounded-full text-xs font-bold hover:bg-primary hover:text-white transition-all">
-                              THÊM
-                            </button>
-                          )}
+  <div className="flex items-center bg-dark rounded-full border border-primary/50 overflow-hidden h-8">
+    <button 
+      onClick={() => handleUpdateCart(food.id, -1)} 
+      className="w-8 h-full flex items-center justify-center hover:bg-primary hover:text-white text-gray-400 transition-colors"
+    >
+      <Minus className="w-4 h-4 flex-shrink-0" />
+    </button>
+    
+    <span className="w-6 text-center text-sm font-bold">{qty}</span>
+    
+    <button 
+      onClick={() => handleUpdateCart(food.id, 1)} 
+      className="w-8 h-full flex items-center justify-center hover:bg-primary hover:text-white text-gray-400 transition-colors"
+    >
+      <Plus className="w-4 h-4 flex-shrink-0" />
+    </button>
+  </div>
+) : (
+  <button 
+    onClick={() => handleUpdateCart(food.id, 1)} 
+    className="bg-primary/10 text-primary border border-primary/30 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-primary hover:text-white transition-all"
+  >
+    THÊM
+  </button>
+)}
                         </div>
                       </div>
                     );
@@ -144,7 +149,7 @@ export default function FoodSelectionPage() {
                       disabled={currentPage === 1}
                       className="w-10 h-10 rounded-full flex items-center justify-center bg-dark border border-gray-700 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400"
                     >
-                      <ChevronLeft size={20} />
+                      <ChevronLeft size="{20}"/>
                     </button>
                     <span className="font-bold text-gray-400">
                       Trang <span className="text-white">{currentPage}</span> / {totalPages}
@@ -154,7 +159,7 @@ export default function FoodSelectionPage() {
                       disabled={currentPage === totalPages}
                       className="w-10 h-10 rounded-full flex items-center justify-center bg-dark border border-gray-700 text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400"
                     >
-                      <ChevronRight size={20} />
+                      <ChevronRight size="{20}"/>
                     </button>
                   </div>
                 )}
@@ -167,9 +172,9 @@ export default function FoodSelectionPage() {
               <h3 className="text-xl font-bold border-l-4 border-primary pl-3 uppercase tracking-wider mb-6">Thông tin đặt vé</h3>
               
               <div className="space-y-4 text-sm mb-6 pb-6 border-b border-gray-800">
-                <p className="flex justify-between"><span className="text-gray-500">Phim:</span> <span className="font-bold text-right text-white">Lật Mặt 7</span></p>
-                <p className="flex justify-between"><span className="text-gray-500">Rạp:</span> <span className="font-bold text-right text-white">CGV Hà Nội</span></p>
-                <p className="flex justify-between"><span className="text-gray-500">Suất chiếu:</span> <span className="font-bold text-right text-white">10:15 - Hôm nay</span></p>
+                <p className="flex justify-between"><span className="text-gray-500">Phim:</span> <span className="font-bold text-right text-white">{showtimeInfo?.movieTitle}</span></p>
+                <p className="flex justify-between"><span className="text-gray-500">Rạp:</span> <span className="font-bold text-right text-white">{showtimeInfo?.cinemaName} - {showtimeInfo?.hallName}</span></p>
+                <p className="flex justify-between"><span className="text-gray-500">Suất chiếu:</span> <span className="font-bold text-right text-white">{showtimeInfo?.showTime} - {showtimeInfo?.showDate}</span></p>
                 
                 <div className="flex justify-between items-start pt-2">
                   <span className="text-gray-500">Ghế chọn:</span> 
@@ -207,10 +212,9 @@ export default function FoodSelectionPage() {
                 </span>
               </div>
 
-              {/* NÚT CHUYỂN SANG TRANG THANH TOÁN */}
               <button 
                 onClick={() => navigate('/checkout', { 
-                  state: { selectedSeats, seatTotal, cart, foods: safeFoods, finalTotal } 
+                  state: { selectedSeats, seatTotal, cart, foods: safeFoods, finalTotal, showtimeId, showtimeInfo } 
                 })}
                 className="w-full py-4 rounded-xl font-black transition-all duration-300 bg-primary text-white shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:bg-red-700 hover:scale-[1.02]"
               >

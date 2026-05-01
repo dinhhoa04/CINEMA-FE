@@ -11,6 +11,8 @@ import MovieDetailPage from './pages/public/MovieDetailPage';
 import BookingPage from './pages/public/BookingPage'; 
 import FoodSelectionPage from './pages/public/FoodSelectionPage';
 import CheckoutPage from './pages/public/CheckoutPage';
+import PaymentSuccessPage from './pages/public/PaymentSuccessPage';
+
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
   <Route path="/booking/:showtimeId" element={<BookingPage />} />
   <Route path="/food" element={<FoodSelectionPage />} />
   <Route path="/checkout" element={<CheckoutPage />} />
+  <Route path="/payment-success" element={<PaymentSuccessPage />} />
+  
 </Route>
 
         {/* Nhóm 2: Các trang KHÔNG CẦN Navbar (phủ kín màn hình) */}

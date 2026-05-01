@@ -1,7 +1,9 @@
 import axiosInstance from './axiosInstance';
 
 export const showtimeApi = {
-    // Đã nâng cấp API: Gửi đủ 4 tham số xuống Spring Boot
+    // 1. API CŨ CỦA ANH (Giữ nguyên không đụng tới)
     getShowtimes: (movieId, date, city, chain) => 
         axiosInstance.get(`/showtimes/search?movieId=${movieId}&date=${date}&city=${city}&chain=${chain}`),
+
+    getBookingData: (showtimeId) => axiosInstance.get(`/showtimes/${showtimeId}/booking-data`),
 };

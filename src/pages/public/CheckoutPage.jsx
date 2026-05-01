@@ -1,86 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Monitor, Ticket, Popcorn, User, CreditCard } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore'; // Sử dụng store của bạn để lấy user
+import { bookingApi } from '../../api/bookingApi';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Lấy user đăng nhập hiện tại từ Zustand
+  const { user } = useAuthStore();
 
+  // Nhận toàn bộ dữ liệu từ trang trước truyền sang
   const { 
     selectedSeats = [], 
     seatTotal = 0, 
     cart = {}, 
     foods = [],
-    finalTotal = 0 
+    finalTotal = 0,
+    showtimeId,      // <--- BỔ SUNG DÒNG NÀY ĐỂ KHÔNG BỊ LỖI UNDEFINED
+    showtimeInfo 
   } = location.state || {};
 
-  // Form thông tin người đặt
-  const [userInfo, setUserInfo] = useState({
-    fullName: '',
-    phone: '',
-    email: ''
-  });
-
-  // TỰ ĐỘNG ĐIỀN THÔNG TIN USER ĐĂNG NHẬP
+  // Bảo vệ trang: Nếu không có data ghế hoặc phim, đẩy về trang chủ
   useEffect(() => {
-    // Trong thực tế, anh sẽ lấy thông tin user từ localStorage hoặc Redux/Context
-    // Ví dụ: const storedUser = JSON.parse(localStorage.getItem('user'));
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUserInfo({
-        fullName: parsedUser.fullName || parsedUser.name || '',
-        phone: parsedUser.phone || '',
-        email: parsedUser.email || ''
-      });
-    } else {
-      // Mock data điền sẵn để anh test giao diện nếu chưa cấu hình xong biến user
-      setUserInfo({
-        fullName: 'Cao Đình Hòa',
-        phone: '0987654321',
-        email: 'dinhhoa04@gmail.com'
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedSeats.length === 0) {
+    if (selectedSeats.length === 0 || !showtimeInfo) {
       navigate('/'); 
     }
-  }, [selectedSeats, navigate]);
+  }, [selectedSeats, showtimeInfo, navigate]);
 
-  // Dữ liệu Phim - Sửa lại đường dẫn poster gọi từ thư mục public
-  const mockMovieData = {
-    title: "Lật Mặt 7: Một Điều Ước",
-    genre: "Tình cảm, Gia đình",
-    format: "2D Tiêu Chuẩn",
-    description: "Câu chuyện cảm động về tình mẫu tử và những rạn nứt trong gia đình hiện đại khi người mẹ già yếu cần người chăm sóc...",
-    poster: "https://www.themoviedb.org/t/p/w1280/2mg6ktvWxsOG9iMBP4P1pwOYltk.jpg", 
-    cinemaName: "CGV Vincom Bà Triệu",
-    room: "Phòng 01 IMAX",
-    date: "Thứ Sáu, 29/04/2026",
-    time: "18:00 - 20:00"
-  };
-
-  const handlePayment = (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault(); 
-    if (!userInfo.fullName || !userInfo.phone || !userInfo.email) {
-      alert("Vui lòng nhập đầy đủ thông tin người đặt vé!");
+    if (!user) {
+      alert("Vui lòng đăng nhập để thực hiện thanh toán!");
+      navigate('/login');
       return;
     }
-    alert(`Đang chuyển hướng đến cổng thanh toán VNPAY/MoMo cho số tiền ${finalTotal.toLocaleString('vi-VN')}đ...`);
+
+    try {
+      // Bật loading nếu muốn
+      const requestData = {
+        showtimeId: showtimeId,
+        seatIds: selectedSeats.map(seat => seat.id), // Chỉ gửi mảng ID ghế
+        cart: cart, 
+        finalTotal: finalTotal
+      };
+
+      // GỌI API XUỐNG SPRING BOOT
+      const response = await bookingApi.createBooking(requestData);
+      const bookingCode = response.data; // Mã vé BE trả về
+
+      // CHUYỂN HƯỚNG SANG TRANG SUCCESS
+      navigate('/payment-success', { 
+        state: { 
+          bookingCode: bookingCode,
+          movieTitle: showtimeInfo.movieTitle,
+          cinemaName: showtimeInfo.cinemaName
+        } 
+      });
+
+    } catch (error) {
+      console.error("Lỗi đặt vé:", error);
+      alert("Có lỗi xảy ra trong quá trình thanh toán!");
+    }
   };
+
+  // Tránh lỗi render rỗng màn hình khi đang redirect
+  if (!showtimeInfo) return null;
 
   return (
     <div className="bg-dark min-h-screen text-white pb-20 pt-8">
       <div className="container mx-auto px-4 max-w-6xl">
         
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex items-center text-gray-400 hover:text-white transition-colors mb-8"
-        >
-          <ChevronLeft size={20} className="mr-1" /> Quay lại chọn đồ ăn
+        {/* ĐÃ FIX ICON QUAY LẠI */}
+        <button onClick={() => navigate(-1)} className="flex items-center text-gray-400 hover:text-white transition-colors mb-8">
+          <ChevronLeft className="w-5 h-5 mr-1 flex-shrink-0" /> Quay lại chọn đồ ăn
         </button>
 
         <h1 className="text-3xl font-black uppercase tracking-wider mb-8 border-l-4 border-primary pl-4">Thanh Toán Giao Dịch</h1>
@@ -89,50 +83,52 @@ export default function CheckoutPage() {
           
           <div className="lg:col-span-2 space-y-6">
             
-            {/* BLOCK 1: THÔNG TIN PHIM & LỊCH CHIẾU */}
+            {/* BLOCK 1: THÔNG TIN PHIM */}
             <div className="bg-[#1A1A1A] rounded-2xl p-6 border border-gray-800 shadow-xl flex flex-col md:flex-row gap-6">
-              {/* Sửa lại thẻ img để hiển thị Poster chuẩn, kèm fallback nếu lỗi ảnh */}
               <img 
-                src={mockMovieData.poster} 
-                alt="Poster" 
+                src={showtimeInfo.posterUrl} 
+                alt={showtimeInfo.movieTitle} 
                 onError={(e) => { e.target.src = 'https://via.placeholder.com/200x300/1A1A1A/FFFFFF?text=No+Poster' }}
                 className="w-full md:w-40 h-60 object-cover rounded-xl shadow-lg border border-gray-700" 
               />
               
               <div className="flex-grow space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">{mockMovieData.title}</h2>
-                  <p className="text-sm text-gray-400 mb-2">{mockMovieData.genre} • {mockMovieData.format}</p>
-                  <p className="text-sm text-gray-500 line-clamp-2">{mockMovieData.description}</p>
+                  <h2 className="text-2xl font-bold text-white mb-1">{showtimeInfo.movieTitle}</h2>
+                  <p className="text-sm text-gray-400 mb-2">Định dạng: {showtimeInfo.format}</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-800">
                   <div className="flex items-start gap-3">
-                    <MapPin className="text-primary mt-1" size={18} />
+                    {/* ĐÃ FIX SIZE ICON */}
+                    <MapPin className="text-primary mt-1 w-5 h-5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-400">Rạp chiếu</p>
-                      <p className="font-bold">{mockMovieData.cinemaName}</p>
+                      <p className="font-bold">{showtimeInfo.cinemaName}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Monitor className="text-primary mt-1" size={18} />
+                    {/* ĐÃ FIX SIZE ICON */}
+                    <Monitor className="text-primary mt-1 w-5 h-5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-400">Phòng chiếu</p>
-                      <p className="font-bold">{mockMovieData.room}</p>
+                      <p className="font-bold">{showtimeInfo.hallName}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Calendar className="text-primary mt-1" size={18} />
+                    {/* ĐÃ FIX SIZE ICON */}
+                    <Calendar className="text-primary mt-1 w-5 h-5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-400">Ngày chiếu</p>
-                      <p className="font-bold">{mockMovieData.date}</p>
+                      <p className="font-bold">{showtimeInfo.showDate}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Clock className="text-primary mt-1" size={18} />
+                    {/* ĐÃ FIX SIZE ICON */}
+                    <Clock className="text-primary mt-1 w-5 h-5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-400">Thời gian</p>
-                      <p className="font-bold">{mockMovieData.time}</p>
+                      <p className="font-bold">{showtimeInfo.showTime}</p>
                     </div>
                   </div>
                 </div>
@@ -142,7 +138,8 @@ export default function CheckoutPage() {
             {/* BLOCK 2: GHẾ NGỒI ĐÃ CHỌN */}
             <div className="bg-[#1A1A1A] rounded-2xl p-6 border border-gray-800 shadow-xl">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Ticket className="text-primary" size={20} /> Ghế Đã Chọn
+                {/* ĐÃ FIX SIZE ICON */}
+                <Ticket className="text-primary w-5 h-5 flex-shrink-0" /> Ghế Đã Chọn
               </h3>
               <div className="flex flex-wrap gap-2">
                 {selectedSeats.map(s => (
@@ -154,10 +151,11 @@ export default function CheckoutPage() {
             </div>
 
             {/* BLOCK 3: COMBO ĐỒ ĂN */}
-            {Object.keys(cart).length > 0 ? (
+            {Object.keys(cart).length > 0 && (
               <div className="bg-[#1A1A1A] rounded-2xl p-6 border border-gray-800 shadow-xl">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Popcorn className="text-primary" size={20} /> Đồ Ăn & Thức Uống
+                  {/* ĐÃ FIX SIZE ICON */}
+                  <Popcorn className="text-primary w-5 h-5 flex-shrink-0" /> Đồ Ăn & Thức Uống
                 </h3>
                 <div className="space-y-3">
                   {Object.keys(cart).map(id => {
@@ -178,40 +176,36 @@ export default function CheckoutPage() {
                   })}
                 </div>
               </div>
-            ) : (
-              <div className="bg-[#1A1A1A]/50 rounded-2xl p-6 border border-gray-800 border-dashed text-center text-gray-500">
-                Không có combo đồ ăn nào được chọn.
-              </div>
             )}
 
-            {/* BLOCK 4: THÔNG TIN NGƯỜI ĐẶT (Tự động điền) */}
+            {/* BLOCK 4: THÔNG TIN KHÁCH HÀNG (TỰ ĐỘNG ĐIỀN TỪ useAuthStore, KHÔNG CHO SỬA) */}
             <div className="bg-[#1A1A1A] rounded-2xl p-6 border border-gray-800 shadow-xl">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <User className="text-primary" size={20} /> Thông Tin Khách Hàng
+                {/* ĐÃ FIX SIZE ICON */}
+                <User className="text-primary w-5 h-5 flex-shrink-0" /> Thông Tin Khách Hàng
               </h3>
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-400 mb-1">Họ và Tên *</label>
-                  <input type="text" placeholder="Nhập họ và tên..." required 
-                    value={userInfo.fullName}
-                    onChange={e => setUserInfo({...userInfo, fullName: e.target.value})}
-                    className="w-full bg-[#222] border border-gray-700 rounded-lg p-3 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" />
+                  <label className="block text-sm text-gray-400 mb-1">Họ và Tên</label>
+                  <div className="w-full bg-[#222] border border-gray-700 rounded-lg p-3 text-white font-medium">
+                    {user ? user.fullName : "Vui lòng đăng nhập để xem thông tin"}
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Số điện thoại *</label>
-                  <input type="tel" placeholder="Nhập số điện thoại..." required 
-                    value={userInfo.phone}
-                    onChange={e => setUserInfo({...userInfo, phone: e.target.value})}
-                    className="w-full bg-[#222] border border-gray-700 rounded-lg p-3 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" />
+                  <label className="block text-sm text-gray-400 mb-1">Số điện thoại</label>
+                  <div className="w-full bg-[#222] border border-gray-700 rounded-lg p-3 text-white font-medium">
+                    {/* Fallback nếu DTO đăng nhập BE chưa trả về sđt */}
+                    {user ? (user.phone || "Chưa cập nhật SĐT") : "Vui lòng đăng nhập"}
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Email * (Để nhận vé điện tử)</label>
-                  <input type="email" placeholder="Nhập địa chỉ email..." required 
-                    value={userInfo.email}
-                    onChange={e => setUserInfo({...userInfo, email: e.target.value})}
-                    className="w-full bg-[#222] border border-gray-700 rounded-lg p-3 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" />
+                  <label className="block text-sm text-gray-400 mb-1">Email</label>
+                  <div className="w-full bg-[#222] border border-gray-700 rounded-lg p-3 text-white font-medium">
+                    {user ? (user.email || "Chưa cập nhật Email") : "Vui lòng đăng nhập"}
+                  </div>
                 </div>
-              </form>
+              </div>
             </div>
 
           </div>
@@ -247,12 +241,9 @@ export default function CheckoutPage() {
                 onClick={handlePayment}
                 className="w-full py-4 rounded-xl flex items-center justify-center gap-2 font-black transition-all duration-300 bg-primary text-white shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:bg-red-700 hover:scale-[1.02]"
               >
-                <CreditCard size={20} /> THANH TOÁN NGAY
+                {/* ĐÃ FIX SIZE ICON */}
+                <CreditCard className="w-5 h-5 flex-shrink-0" /> THANH TOÁN NGAY
               </button>
-
-              <p className="text-xs text-gray-500 text-center mt-4">
-                Bằng việc bấm Thanh Toán, bạn đồng ý với Điều khoản và Chính sách của hệ thống rạp.
-              </p>
             </div>
           </div>
 
