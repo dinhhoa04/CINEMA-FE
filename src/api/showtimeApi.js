@@ -6,4 +6,5 @@ export const showtimeApi = {
         axiosInstance.get(`/showtimes/search?movieId=${movieId}&date=${date}&city=${city}&chain=${chain}`),
 
     getBookingData: (showtimeId) => axiosInstance.get(`/showtimes/${showtimeId}/booking-data`),
+    getShowtimesByCinema: (cinemaId, date) => axiosInstance.get(`/showtimes/by-cinema?cinemaId=${cinemaId}&date=${date}`)
 };

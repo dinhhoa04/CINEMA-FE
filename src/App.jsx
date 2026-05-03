@@ -12,6 +12,11 @@ import BookingPage from './pages/public/BookingPage';
 import FoodSelectionPage from './pages/public/FoodSelectionPage';
 import CheckoutPage from './pages/public/CheckoutPage';
 import PaymentSuccessPage from './pages/public/PaymentSuccessPage';
+import ProfilePage from './pages/public/ProfilePage';
+import PromotionsPage from './pages/public/PromotionsPage';
+import MoviesListPage from './pages/public/MoviesListPage';
+import CinemaPage from './pages/public/CinemaPage';
+import CinemaDetailPage from './pages/public/CinemaDetailPage';
 
 
 function App() {
@@ -28,7 +33,11 @@ function App() {
   <Route path="/food" element={<FoodSelectionPage />} />
   <Route path="/checkout" element={<CheckoutPage />} />
   <Route path="/payment-success" element={<PaymentSuccessPage />} />
-  
+  <Route path="/profile" element={<ProfilePage />} />
+  <Route path="/promotions" element={<PromotionsPage />} />
+  <Route path="/movies" element={<MoviesListPage />} />
+  <Route path="/cinemas" element={<CinemaPage />} />
+  <Route path="/cinemas/:id" element={<CinemaDetailPage />} />
 </Route>
 
         {/* Nhóm 2: Các trang KHÔNG CẦN Navbar (phủ kín màn hình) */}

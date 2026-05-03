@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { movieApi } from '../../api/movieApi';
 import { showtimeApi } from '../../api/showtimeApi';
-import { systemApi } from '../../api/systemApi'; // Đừng quên import systemApi nhé
-import { Clock, Star, MapPin, ChevronRight, ChevronDown, Info } from 'lucide-react'; // Thêm ChevronDown
+import { systemApi } from '../../api/systemApi'; 
+import { Clock, Star, MapPin, ChevronRight, ChevronDown, Info, Bell, Send } from 'lucide-react'; // Thêm Bell, Send
+import { useAuthStore } from '../../store/authStore'; // Lấy thông tin user
+import toast from 'react-hot-toast'; // Thư viện thông báo
 
 export default function MovieDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore(); // Lấy user từ Zustand
+
   const [movie, setMovie] = useState(null);
   const [showtimes, setShowtimes] = useState([]);
   
@@ -24,6 +28,16 @@ export default function MovieDetailPage() {
   // State bật/tắt menu xổ xuống (Dropdown)
   const [showChainDropdown, setShowChainDropdown] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+  // State cho form nhận thông báo
+  const [notifyEmail, setNotifyEmail] = useState('');
+
+  // Tự động điền email nếu user đã đăng nhập
+  useEffect(() => {
+    if (user?.email) {
+      setNotifyEmail(user.email);
+    }
+  }, [user]);
 
   // 1. Lấy thông tin phim và danh sách Rạp/Thành phố từ Backend
   useEffect(() => {
@@ -44,7 +58,6 @@ export default function MovieDetailPage() {
         setDbCities(actualCities);
         setDbChains(actualChains);
 
-        // Gán giá trị mặc định là phần tử đầu tiên trong DB
         if(actualChains.length > 0) setSelectedCinemaChain(actualChains[0].name);
         if(actualCities.length > 0) setSelectedCity(actualCities[0].name);
 
@@ -66,7 +79,7 @@ export default function MovieDetailPage() {
           setShowtimes(actualShowtimes);
         } catch (error) {
           console.error("Lỗi lấy lịch chiếu:", error);
-          setShowtimes([]); // Lỗi thì gán mảng rỗng
+          setShowtimes([]); 
         } finally {
           setIsLoading(false);
         }
@@ -91,21 +104,33 @@ export default function MovieDetailPage() {
     return days;
   };
 
-  // Kiểm tra xem mục đang chọn có nằm trong nút "Khác" không
   const isChainInOthers = dbChains.slice(5).some(c => c.name === selectedCinemaChain);
   const isCityInOthers = dbCities.slice(5).some(c => c.name === selectedCity);
+
+  // Xử lý nút Đăng ký nhận thông báo
+  const handleSubscribeNotify = () => {
+    if (!notifyEmail) {
+      toast.error("Vui lòng nhập địa chỉ email của bạn!");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(notifyEmail)) {
+      toast.error("Định dạng email không hợp lệ!");
+      return;
+    }
+    // Chỗ này sau này có thể gọi API: await movieApi.subscribeNotification(movie.id, notifyEmail);
+    toast.success("Đăng ký thành công! Chúng tôi sẽ email cho bạn ngay khi mở bán vé.");
+  };
 
   if (!movie) return <div className="min-h-screen bg-dark flex items-center justify-center text-primary font-bold">Đang tải phim...</div>;
 
   return (
     <div className="bg-dark min-h-screen text-white pb-20">
       
-      {/* PHẦN 1: CHỌN CỤM RẠP (SELECT CINEMA CHAIN) */}
+      {/* PHẦN 1: CHỌN CỤM RẠP */}
       <div className="container mx-auto px-4 pt-8">
         <h3 className="text-gray-400 text-xs font-bold mb-4 uppercase tracking-widest">Chọn cụm rạp</h3>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-10 relative">
-          
-          {/* Render 5 rạp đầu tiên */}
           {dbChains.slice(0, 5).map(chain => (
             <button
               key={chain.id}
@@ -120,7 +145,6 @@ export default function MovieDetailPage() {
             </button>
           ))}
           
-          {/* Nút "Rạp khác" có Dropdown */}
           {dbChains.length > 5 && (
             <div className="relative h-full">
               <button 
@@ -132,7 +156,6 @@ export default function MovieDetailPage() {
                 {isChainInOthers ? selectedCinemaChain : 'Rạp khác'} <ChevronDown size={18} className={showChainDropdown ? 'rotate-180 transition-transform' : 'transition-transform'}/>
               </button>
               
-              {/* Menu xổ xuống */}
               {showChainDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-[#1A1A1A] border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden">
                   {dbChains.slice(5).map(chain => (
@@ -150,7 +173,7 @@ export default function MovieDetailPage() {
           )}
         </div>
 
-        {/* PHẦN 2: CHỌN NGÀY (SELECT DATE) */}
+        {/* PHẦN 2: CHỌN NGÀY */}
         <h3 className="text-gray-400 text-xs font-bold mb-4 uppercase tracking-widest">Chọn ngày xem</h3>
         <div className="flex gap-4 overflow-x-auto pb-4 mb-10 scrollbar-hide">
           {getNext7Days().map((day) => (
@@ -170,11 +193,9 @@ export default function MovieDetailPage() {
           ))}
         </div>
 
-        {/* PHẦN 3: CHỌN THÀNH PHỐ (SELECT LOCATION) */}
+        {/* PHẦN 3: CHỌN THÀNH PHỐ */}
         <h3 className="text-gray-400 text-xs font-bold mb-4 uppercase tracking-widest">Chọn thành phố</h3>
         <div className="flex flex-wrap gap-3 mb-12 relative">
-          
-          {/* Render 5 thành phố đầu tiên */}
           {dbCities.slice(0, 5).map(city => (
             <button
               key={city.id}
@@ -189,7 +210,6 @@ export default function MovieDetailPage() {
             </button>
           ))}
           
-          {/* Nút "Thành phố khác" có Dropdown */}
           {dbCities.length > 5 && (
             <div className="relative">
               <button 
@@ -201,7 +221,6 @@ export default function MovieDetailPage() {
                 {isCityInOthers ? selectedCity : 'Thành phố khác'} <ChevronDown size={16} className={showCityDropdown ? 'rotate-180 transition-transform' : 'transition-transform'}/>
               </button>
 
-              {/* Menu xổ xuống */}
               {showCityDropdown && (
                 <div className="absolute top-full left-0 mt-2 w-48 bg-[#1A1A1A] border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden">
                   {dbCities.slice(5).map(city => (
@@ -219,14 +238,13 @@ export default function MovieDetailPage() {
           )}
         </div>
 
-        {/* PHẦN 4: DANH SÁCH SUẤT CHIẾU (CHÍNH) */}
+        {/* PHẦN 4: DANH SÁCH SUẤT CHIẾU */}
         <div className="space-y-10">
           
           {isLoading ? (
             <div className="text-center py-10 text-primary font-bold animate-pulse">Đang tìm lịch chiếu...</div>
           ) : showtimes.length > 0 ? (
             
-            /* CÓ LỊCH CHIẾU: Lặp qua danh sách Rạp và in ra giờ chiếu */
             showtimes.map(cinema => (
               <div key={cinema.cinemaId} className="bg-card rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
                 <div className="bg-[#222] p-5 flex justify-between items-center border-b border-gray-700">
@@ -279,13 +297,13 @@ export default function MovieDetailPage() {
             ))
           ) : (
             
-            /* KHÔNG CÓ LỊCH CHIẾU: Giữ nguyên Layout giao diện, nhưng thay Giờ chiếu thành Thông báo */
+            /* GIAO DIỆN KHI CHƯA CÓ LỊCH CHIẾU (PHIM SẮP CHIẾU) */
             <div className="bg-card rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
               <div className="bg-[#222] p-5 flex justify-between items-center border-b border-gray-700">
                 <div>
                   <h4 className="text-xl font-black text-white">{selectedCinemaChain} - {selectedCity}</h4>
                   <p className="text-gray-500 text-sm flex items-center gap-1 mt-1">
-                    <MapPin size={14} /> Vui lòng chọn ngày khác để xem chi tiết địa chỉ
+                    <MapPin size={14} /> Hệ thống đang cập nhật lịch chiếu cho rạp này
                   </p>
                 </div>
               </div>
@@ -303,13 +321,31 @@ export default function MovieDetailPage() {
                     <span className="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded text-[10px] font-black">{movie.rated || 'T18'}</span>
                   </div>
 
-                  <div className="mt-8 bg-dark/50 border border-gray-700 rounded-xl p-8 text-center">
-                    <Info className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <h4 className="text-lg font-bold text-gray-300 mb-2">Chưa có lịch chiếu</h4>
-                    <p className="text-gray-500 text-sm">
-                      Rất tiếc, cụm rạp <strong className="text-white">{selectedCinemaChain}</strong> tại <strong className="text-white">{selectedCity}</strong> hiện chưa có suất chiếu nào vào ngày <strong className="text-white">{selectedDate}</strong>.
+                  {/* KHU VỰC ĐĂNG KÝ NHẬN THÔNG BÁO */}
+                  <div className="mt-8 bg-dark/50 border border-gray-700 rounded-xl p-8 text-center max-w-2xl mx-auto">
+                    <Bell className="w-12 h-12 text-accent mx-auto mb-4 animate-bounce" />
+                    <h4 className="text-xl font-bold text-white mb-2">Nhận thông báo mở bán vé</h4>
+                    <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                      Lịch chiếu cho ngày <strong className="text-white">{selectedDate}</strong> chưa được công bố. Để lại Email để chúng tôi báo cho bạn ngay khi vé được mở bán nhé!
                     </p>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input 
+                        type="email" 
+                        placeholder="Nhập địa chỉ email của bạn..." 
+                        value={notifyEmail}
+                        onChange={(e) => setNotifyEmail(e.target.value)}
+                        className="flex-grow bg-[#222] border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                      />
+                      <button 
+                        onClick={handleSubscribeNotify}
+                        className="bg-primary text-white font-bold px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Send size={18} /> Đăng ký
+                      </button>
+                    </div>
                   </div>
+
                 </div>
               </div>
             </div>
