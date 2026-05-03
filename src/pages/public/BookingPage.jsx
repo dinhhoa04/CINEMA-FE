@@ -10,7 +10,7 @@ export default function BookingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [seats, setSeats] = useState([]);
-  const [showtimeInfo, setShowtimeInfo] = useState(null); // Lưu thông tin Phim/Rạp
+  const [showtimeInfo, setShowtimeInfo] = useState(null);
 
   // 1. GỌI API LẤY DỮ LIỆU THẬT
   useEffect(() => {
@@ -35,9 +35,10 @@ export default function BookingPage() {
     if (seat.status !== 'AVAILABLE') return;
 
     setSelectedSeats(prev => {
-      const isAlreadySelected = prev.find(s => s.id === seat.id);
+      // SỬA: Backend trả về seatId thay vì id
+      const isAlreadySelected = prev.find(s => s.seatId === seat.seatId);
       if (isAlreadySelected) {
-        return prev.filter(s => s.id !== seat.id);
+        return prev.filter(s => s.seatId !== seat.seatId);
       } else {
         if (prev.length >= 8) {
           alert('Bạn chỉ được mua tối đa 8 vé trong một lần giao dịch!');
@@ -51,10 +52,12 @@ export default function BookingPage() {
   // 3. TÍNH TỔNG TIỀN
   const totalPrice = selectedSeats.reduce((sum, seat) => sum + Number(seat.price || 0), 0);
 
-  // 4. NHÓM GHẾ THEO HÀNG
+  // 4. NHÓM GHẾ THEO HÀNG (SỬA LẠI THÀNH rowName)
   const groupedSeats = seats.reduce((acc, seat) => {
-    if (!acc[seat.row]) acc[seat.row] = [];
-    acc[seat.row].push(seat);
+    // SỬA: Backend trả về rowName
+    const rowName = seat.rowName;
+    if (!acc[rowName]) acc[rowName] = [];
+    acc[rowName].push(seat);
     return acc;
   }, {});
 
@@ -75,7 +78,6 @@ export default function BookingPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-
           <div className="lg:col-span-2 bg-[#1A1A1A] rounded-2xl p-4 md:p-8 border border-gray-800 shadow-2xl overflow-hidden">
             <h2 className="text-2xl font-black mb-8 text-center text-gray-200">CHỌN GHẾ</h2>
 
@@ -94,10 +96,12 @@ export default function BookingPage() {
 
                     <div className="flex justify-center gap-2 w-full max-w-[550px]">
                       {groupedSeats[row].map(seat => {
-                        const isSelected = selectedSeats.some(s => s.id === seat.id);
+                        // SỬA: Dùng seatId
+                        const isSelected = selectedSeats.some(s => s.seatId === seat.seatId);
                         let btnClass = "h-8 md:h-10 rounded-t-lg rounded-b-sm text-[10px] font-bold transition-all duration-200 flex items-center justify-center ";
 
-                        if (seat.type === 'COUPLE') {
+                        // SỬA: Backend trả về typeId (1: Thường, 2: VIP, 3: Couple)
+                        if (seat.typeId === 3) {
                           btnClass += " w-[72px] md:w-[88px] ";
                         } else {
                           btnClass += " w-8 md:w-10 ";
@@ -106,28 +110,29 @@ export default function BookingPage() {
                         if (seat.status !== 'AVAILABLE') {
                           btnClass += "bg-gray-800 text-gray-600 cursor-not-allowed";
                         } else if (isSelected) {
-                          if (seat.type === 'COUPLE') {
+                          if (seat.typeId === 3) {
                             btnClass += "bg-pink-600 text-white scale-110 shadow-[0_0_10px_rgba(219,39,119,0.5)]";
                           } else {
                             btnClass += "bg-primary text-white scale-110 shadow-[0_0_10px_rgba(229,9,20,0.5)]";
                           }
-                        } else if (seat.type === 'VIP') {
+                        } else if (seat.typeId === 2) { // VIP
                           btnClass += "bg-transparent border border-accent text-accent hover:bg-accent/20";
-                        } else if (seat.type === 'COUPLE') {
+                        } else if (seat.typeId === 3) { // Couple
                           btnClass += "bg-transparent border border-pink-500 text-pink-500 hover:bg-pink-500/20";
-                        } else {
+                        } else { // Thường
                           btnClass += "bg-transparent border border-gray-600 text-gray-400 hover:border-white hover:text-white";
                         }
 
                         return (
                           <button
-                            key={seat.id}
+                            key={seat.seatId}
                             onClick={() => handleSeatClick(seat)}
                             disabled={seat.status !== 'AVAILABLE'}
                             className={btnClass}
                             title={`Ghế ${seat.name} - ${seat.price?.toLocaleString()}đ`}
                           >
-                            {isSelected ? <Check className="w-4 h-4 flex-shrink-0" strokeWidth={4} /> : seat.col}
+                            {/* SỬA: Hiển thị colIndex thay vì col */}
+                            {isSelected ? <Check className="w-4 h-4 flex-shrink-0" strokeWidth={4} /> : seat.colIndex}
                           </button>
                         );
                       })}
@@ -142,7 +147,7 @@ export default function BookingPage() {
             <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm font-bold text-gray-400 border-t border-gray-800 pt-8">
               <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-t border border-gray-600"></div> Thường</div>
               <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-t border border-accent text-accent flex items-center justify-center text-[10px]">VIP</div> VIP</div>
-              <div className="flex items-center gap-2"><div className="w-10 h-5 rounded-t border border-pink-500 text-pink-500 flex items-center justify-center"><Heart size="{12}" /></div> Đôi</div>
+              <div className="flex items-center gap-2"><div className="w-10 h-5 rounded-t border border-pink-500 text-pink-500 flex items-center justify-center"><Heart size={12} /></div> Đôi</div>
               <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-t bg-primary"></div> Đang chọn</div>
               <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-t bg-gray-800"></div> Đã bán</div>
             </div>
@@ -164,9 +169,9 @@ export default function BookingPage() {
                     {selectedSeats.length > 0 ? (
                       selectedSeats.map(s => (
                         <span
-                          key={s.id}
-                          className={`border px-2 py-1 rounded text-xs font-black shadow-sm ${s.type === 'COUPLE' ? 'bg-pink-900/30 text-pink-500 border-pink-500/50' :
-                              s.type === 'VIP' ? 'bg-yellow-900/30 text-accent border-accent/50' :
+                          key={s.seatId}
+                          className={`border px-2 py-1 rounded text-xs font-black shadow-sm ${s.typeId === 3 ? 'bg-pink-900/30 text-pink-500 border-pink-500/50' :
+                              s.typeId === 2 ? 'bg-yellow-900/30 text-accent border-accent/50' :
                                 'bg-[#222] text-primary border-primary/30'
                             }`}
                         >
@@ -194,7 +199,7 @@ export default function BookingPage() {
                     selectedSeats: selectedSeats,
                     seatTotal: totalPrice,
                     showtimeId: showtimeId,
-                    showtimeInfo: showtimeInfo // Ném nguyên cục Data Phim đi qua trang Food
+                    showtimeInfo: showtimeInfo 
                   }
                 })}
                 className={`w-full py-4 rounded-xl font-black transition-all duration-300 ${selectedSeats.length > 0
