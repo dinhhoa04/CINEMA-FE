@@ -1,13 +1,17 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
+// Admin Layout & Pages
+import AdminLayout from './components/layout/AdminLayout';
+import DashboardPage from './pages/admin/DashboardPage';
+import AdminPromotionsPage from './pages/admin/AdminPromotionsPage';
+
 // Layout & Pages
 import MainLayout from './components/layout/MainLayout';
 import HomePage from './pages/public/HomePage';
 import LoginPage from './pages/public/LoginPage';
 import RegisterPage from './pages/public/RegisterPage';
 import MovieDetailPage from './pages/public/MovieDetailPage';
-// BỔ SUNG DÒNG IMPORT NÀY:
 import BookingPage from './pages/public/BookingPage'; 
 import FoodSelectionPage from './pages/public/FoodSelectionPage';
 import CheckoutPage from './pages/public/CheckoutPage';
@@ -17,6 +21,8 @@ import PromotionsPage from './pages/public/PromotionsPage';
 import MoviesListPage from './pages/public/MoviesListPage';
 import CinemaPage from './pages/public/CinemaPage';
 import CinemaDetailPage from './pages/public/CinemaDetailPage';
+import PromotionDetailPage from './pages/public/PromotionDetailPage';
+
 
 
 function App() {
@@ -38,13 +44,24 @@ function App() {
   <Route path="/movies" element={<MoviesListPage />} />
   <Route path="/cinemas" element={<CinemaPage />} />
   <Route path="/cinemas/:id" element={<CinemaDetailPage />} />
+  <Route path="/promotions/:id" element={<PromotionDetailPage />} />
+  
 </Route>
 
         {/* Nhóm 2: Các trang KHÔNG CẦN Navbar (phủ kín màn hình) */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        {/* Đã xóa dòng MovieDetailPage bị dư thừa ở khu vực này */}
-      </Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Nhóm 3: Dành riêng cho ADMIN (Có Sidebar riêng, tách biệt hoàn toàn) */}
+        <Route path="/admin" element={<AdminLayout />}>
+          {/* Trang mặc định khi vào /admin */}
+          <Route index element={<DashboardPage />} />
+
+          {/* Các trang quản lý khác sẽ thêm vào đây sau */}
+          <Route path="promotions" element={<AdminPromotionsPage />} />
+          <Route path="food" element={<div>Trang quản lý đồ ăn (Đang phát triển)</div>} />
+        </Route>
+      </Routes>
       
     </BrowserRouter>
   );
