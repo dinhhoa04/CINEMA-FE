@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import AdminLayout from './components/layout/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 import AdminPromotionsPage from './pages/admin/AdminPromotionsPage';
+import AdminFoodPage from './pages/admin/AdminFoodPage';
 
 // Layout & Pages
 import MainLayout from './components/layout/MainLayout';
@@ -59,7 +60,7 @@ function App() {
 
           {/* Các trang quản lý khác sẽ thêm vào đây sau */}
           <Route path="promotions" element={<AdminPromotionsPage />} />
-          <Route path="food" element={<div>Trang quản lý đồ ăn (Đang phát triển)</div>} />
+          <Route path="food" element={<AdminFoodPage />} />
         </Route>
       </Routes>
       
