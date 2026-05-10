@@ -188,7 +188,11 @@ export default function CheckoutPage() {
                     return (
                       <div key={id} className="flex justify-between items-center bg-[#222] p-3 rounded-lg border border-gray-800">
                         <div className="flex items-center gap-4">
-                          <img src={`/image/combofood/${food.imageUrl}`} alt={food.name} className="w-12 h-12 rounded object-cover" />
+                          <img 
+  src={food.imageUrl?.startsWith('http') ? food.imageUrl : `/image/combofood/${food.imageUrl}`} 
+  alt={food.name} 
+  className="w-12 h-12 rounded object-cover" 
+/>
                           <div>
                             <p className="font-bold">{food.name}</p>
                             <p className="text-xs text-gray-500">{food.price.toLocaleString('vi-VN')} đ</p>

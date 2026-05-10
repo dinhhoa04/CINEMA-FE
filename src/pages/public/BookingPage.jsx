@@ -12,7 +12,6 @@ export default function BookingPage() {
   const [seats, setSeats] = useState([]);
   const [showtimeInfo, setShowtimeInfo] = useState(null);
 
-  // 1. GỌI API LẤY DỮ LIỆU THẬT
   useEffect(() => {
     const fetchRealSeats = async () => {
       try {
@@ -26,16 +25,12 @@ export default function BookingPage() {
         setIsLoading(false);
       }
     };
-
     if (showtimeId) fetchRealSeats();
   }, [showtimeId]);
 
-  // 2. HÀM XỬ LÝ CLICK CHỌN GHẾ
   const handleSeatClick = (seat) => {
     if (seat.status !== 'AVAILABLE') return;
-
     setSelectedSeats(prev => {
-      // SỬA: Backend trả về seatId thay vì id
       const isAlreadySelected = prev.find(s => s.seatId === seat.seatId);
       if (isAlreadySelected) {
         return prev.filter(s => s.seatId !== seat.seatId);
@@ -49,35 +44,25 @@ export default function BookingPage() {
     });
   };
 
-  // 3. TÍNH TỔNG TIỀN
   const totalPrice = selectedSeats.reduce((sum, seat) => sum + Number(seat.price || 0), 0);
 
-  // 4. NHÓM GHẾ THEO HÀNG (SỬA LẠI THÀNH rowName)
   const groupedSeats = seats.reduce((acc, seat) => {
-    // SỬA: Backend trả về rowName
     const rowName = seat.rowName;
     if (!acc[rowName]) acc[rowName] = [];
     acc[rowName].push(seat);
     return acc;
   }, {});
 
-  if (isLoading) {
-    return <div className="min-h-screen bg-dark flex items-center justify-center text-primary font-bold animate-pulse">Đang tải phòng chiếu...</div>;
-  }
+  if (isLoading) return <div className="min-h-screen bg-dark flex items-center justify-center text-primary font-bold animate-pulse">Đang tải phòng chiếu...</div>;
 
   return (
     <div className="bg-dark min-h-screen text-white pb-20 pt-8">
       <div className="container mx-auto px-4">
-
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center text-gray-400 hover:text-white transition-colors mb-8"
-        >
+        <button onClick={() => navigate(-1)} className="flex items-center text-gray-400 hover:text-white transition-colors mb-8">
           <ChevronLeft size={20} className="mr-1" /> Quay lại chọn suất chiếu
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
           <div className="lg:col-span-2 bg-[#1A1A1A] rounded-2xl p-4 md:p-8 border border-gray-800 shadow-2xl overflow-hidden">
             <h2 className="text-2xl font-black mb-8 text-center text-gray-200">CHỌN GHẾ</h2>
 
@@ -96,11 +81,24 @@ export default function BookingPage() {
 
                     <div className="flex justify-center gap-2 w-full max-w-[550px]">
                       {groupedSeats[row].map(seat => {
-                        // SỬA: Dùng seatId
+                        
+                        // ✅ FIX TẬN GỐC: Bao phủ mọi trường hợp đổi tên biến của Spring Boot
+                        // Nếu Backend gửi thiếu, gửi là 'active', hay gửi là 'is_active', ta bắt hết!
+                        const isHidden = 
+                            seat.isActive === false || 
+                            seat.active === false || 
+                            seat.is_active === false || 
+                            seat.is_active === 0;
+
+                        if (isHidden) {
+                          // TRẢ VỀ Ô TÀNG HÌNH (Giữ nguyên cấu trúc Lối đi, tuyệt đối không dùng filter)
+                          return <div key={seat.seatId || Math.random()} className={seat.typeId === 3 ? "w-[72px] md:w-[88px]" : "w-8 md:w-10"} />;
+                        }
+
+                        // Đoạn dưới này giữ nguyên như cũ...
                         const isSelected = selectedSeats.some(s => s.seatId === seat.seatId);
                         let btnClass = "h-8 md:h-10 rounded-t-lg rounded-b-sm text-[10px] font-bold transition-all duration-200 flex items-center justify-center ";
 
-                        // SỬA: Backend trả về typeId (1: Thường, 2: VIP, 3: Couple)
                         if (seat.typeId === 3) {
                           btnClass += " w-[72px] md:w-[88px] ";
                         } else {
@@ -110,16 +108,13 @@ export default function BookingPage() {
                         if (seat.status !== 'AVAILABLE') {
                           btnClass += "bg-gray-800 text-gray-600 cursor-not-allowed";
                         } else if (isSelected) {
-                          if (seat.typeId === 3) {
-                            btnClass += "bg-pink-600 text-white scale-110 shadow-[0_0_10px_rgba(219,39,119,0.5)]";
-                          } else {
-                            btnClass += "bg-primary text-white scale-110 shadow-[0_0_10px_rgba(229,9,20,0.5)]";
-                          }
-                        } else if (seat.typeId === 2) { // VIP
+                          if (seat.typeId === 3) btnClass += "bg-pink-600 text-white scale-110 shadow-[0_0_10px_rgba(219,39,119,0.5)]";
+                          else btnClass += "bg-primary text-white scale-110 shadow-[0_0_10px_rgba(229,9,20,0.5)]";
+                        } else if (seat.typeId === 2) { 
                           btnClass += "bg-transparent border border-accent text-accent hover:bg-accent/20";
-                        } else if (seat.typeId === 3) { // Couple
+                        } else if (seat.typeId === 3) { 
                           btnClass += "bg-transparent border border-pink-500 text-pink-500 hover:bg-pink-500/20";
-                        } else { // Thường
+                        } else { 
                           btnClass += "bg-transparent border border-gray-600 text-gray-400 hover:border-white hover:text-white";
                         }
 
@@ -131,7 +126,6 @@ export default function BookingPage() {
                             className={btnClass}
                             title={`Ghế ${seat.name} - ${seat.price?.toLocaleString()}đ`}
                           >
-                            {/* SỬA: Hiển thị colIndex thay vì col */}
                             {isSelected ? <Check className="w-4 h-4 flex-shrink-0" strokeWidth={4} /> : seat.colIndex}
                           </button>
                         );
@@ -153,7 +147,6 @@ export default function BookingPage() {
             </div>
           </div>
 
-
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-[#1A1A1A] rounded-2xl p-6 md:p-8 border border-gray-800 shadow-2xl sticky top-8">
               <h3 className="text-xl font-bold border-l-4 border-primary pl-3 uppercase tracking-wider mb-6">Thông tin đặt vé</h3>
@@ -168,13 +161,7 @@ export default function BookingPage() {
                   <div className="flex flex-wrap justify-end gap-1.5 max-w-[60%]">
                     {selectedSeats.length > 0 ? (
                       selectedSeats.map(s => (
-                        <span
-                          key={s.seatId}
-                          className={`border px-2 py-1 rounded text-xs font-black shadow-sm ${s.typeId === 3 ? 'bg-pink-900/30 text-pink-500 border-pink-500/50' :
-                              s.typeId === 2 ? 'bg-yellow-900/30 text-accent border-accent/50' :
-                                'bg-[#222] text-primary border-primary/30'
-                            }`}
-                        >
+                        <span key={s.seatId} className={`border px-2 py-1 rounded text-xs font-black shadow-sm ${s.typeId === 3 ? 'bg-pink-900/30 text-pink-500 border-pink-500/50' : s.typeId === 2 ? 'bg-yellow-900/30 text-accent border-accent/50' : 'bg-[#222] text-primary border-primary/30'}`}>
                           {s.name}
                         </span>
                       ))
@@ -187,31 +174,18 @@ export default function BookingPage() {
 
               <div className="flex justify-between items-end mb-8 bg-[#222] p-4 rounded-xl border border-gray-800">
                 <span className="text-gray-400 font-bold mb-1">Tổng tiền</span>
-                <span className="text-3xl font-black text-accent">
-                  {totalPrice.toLocaleString('vi-VN')} đ
-                </span>
+                <span className="text-3xl font-black text-accent">{totalPrice.toLocaleString('vi-VN')} đ</span>
               </div>
 
               <button
                 disabled={selectedSeats.length === 0}
-                onClick={() => navigate('/food', {
-                  state: {
-                    selectedSeats: selectedSeats,
-                    seatTotal: totalPrice,
-                    showtimeId: showtimeId,
-                    showtimeInfo: showtimeInfo 
-                  }
-                })}
-                className={`w-full py-4 rounded-xl font-black transition-all duration-300 ${selectedSeats.length > 0
-                    ? 'bg-primary text-white shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:bg-red-700 hover:scale-[1.02]'
-                    : 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                  }`}
+                onClick={() => navigate('/food', { state: { selectedSeats, seatTotal: totalPrice, showtimeId, showtimeInfo } })}
+                className={`w-full py-4 rounded-xl font-black transition-all duration-300 ${selectedSeats.length > 0 ? 'bg-primary text-white shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:bg-red-700 hover:scale-[1.02]' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
               >
                 TIẾP TỤC CHỌN ĐỒ ĂN
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </div>

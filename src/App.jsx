@@ -7,6 +7,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import AdminPromotionsPage from './pages/admin/AdminPromotionsPage';
 import AdminFoodPage from './pages/admin/AdminFoodPage';
 import AdminCinemaPage from './pages/admin/AdminCinemaPage';
+import AdminMoviePage from './pages/admin/AdminMoviePage';
 
 // Layout & Pages
 import MainLayout from './components/layout/MainLayout';
@@ -63,6 +64,7 @@ function App() {
           <Route path="promotions" element={<AdminPromotionsPage />} />
           <Route path="food" element={<AdminFoodPage />} />
           <Route path="cinemas" element={<AdminCinemaPage />} />
+          <Route path="movies" element={<AdminMoviePage />} />
         </Route>
       </Routes>
       

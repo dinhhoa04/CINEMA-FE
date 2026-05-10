@@ -47,7 +47,10 @@ export default function MovieCard({ movie, isComingSoon = false, onOpenModal }) 
         {!isComingSoon ? (
           <div className="flex justify-between items-center text-text-muted text-xs">
             <span>{movie.duration} phút</span>
-            <span className="text-accent font-bold"><i className="fas fa-star mr-1"></i>8.5</span>
+            <span className="text-accent font-bold">
+              <i className="fas fa-star mr-1"></i>
+              {movie.averageRating ? Number(movie.averageRating).toFixed(1) : '0.0'}
+            </span>
           </div>
         ) : (
           <p className="text-text-muted text-xs">Khởi chiếu: {movie.releaseDate || 'Sắp tới'}</p>
