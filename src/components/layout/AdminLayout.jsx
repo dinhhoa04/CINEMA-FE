@@ -1,16 +1,26 @@
 import { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuthStore } from '../../store/authStore';
 import { 
   LayoutDashboard, Film, MonitorPlay, Popcorn, Tag, Ticket, Users, LogOut, Menu
 } from "lucide-react";
 
 const AdminLayout = () => {
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout(); // 1. Xóa sạch dữ liệu trong Zustand/LocalStorage
+    navigate('/login'); // 2. Đẩy về trang đăng nhập
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
 
   const menuItems = [
     { name: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={20} /> },
     { name: "Quản lý Rạp & Phòng", path: "/admin/cinemas", icon: <MonitorPlay size={20} /> },
+    // Đã sửa lỗi thiếu dấu đóng thẻ /> ở dòng Film dưới đây:
     { name: "Quản lý Phim & Lịch", path: "/admin/movies", icon: <Film size={20} /> },
     { name: "Quản lý Đồ ăn (F&B)", path: "/admin/food", icon: <Popcorn size={20} /> },
     { name: "Quản lý Khuyến mãi", path: "/admin/promotions", icon: <Tag size={20} /> },
@@ -23,8 +33,8 @@ const AdminLayout = () => {
       <aside className={`${isSidebarOpen ? "w-64" : "w-20"} bg-white shadow-xl transition-all duration-300 flex flex-col`}>
         <div className="h-16 flex items-center justify-center border-b border-gray-200">
           <span className="text-3xl font-extrabold text-red-600 tracking-tight">
-  {isSidebarOpen ? "CineAdmin" : "CA"}
-</span>
+            {isSidebarOpen ? "CineAdmin" : "CA"}
+          </span>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-2 px-3">
@@ -35,8 +45,8 @@ const AdminLayout = () => {
                   <Link
                     to={item.path}
                     className={`flex items-center p-3 rounded-lg transition-colors text-lg ${
-  isActive ? "bg-red-50 text-red-600 font-bold" : "text-gray-600 hover:bg-gray-100 hover:text-red-500"
-}`}
+                      isActive ? "bg-red-50 text-red-600 font-bold" : "text-gray-600 hover:bg-gray-100 hover:text-red-500"
+                    }`}
                   >
                     <span className={`${isActive ? "text-red-600" : "text-gray-500"}`}>{item.icon}</span>
                     {isSidebarOpen && <span className="ml-3">{item.name}</span>}
@@ -46,10 +56,15 @@ const AdminLayout = () => {
             })}
           </ul>
         </nav>
+        
+        {/* Đã trang trí lại nút Đăng xuất cho đẹp và chuẩn UI */}
         <div className="p-4 border-t border-gray-200">
-          <button className="flex items-center w-full p-3 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-lg">
-            <LogOut size={20} />
-            {isSidebarOpen && <span className="ml-3">Đăng xuất</span>}
+          <button 
+            onClick={handleLogout}
+            className="flex items-center w-full p-3 rounded-lg transition-colors text-lg text-gray-600 hover:bg-red-50 hover:text-red-600"
+          >
+            <span className="text-gray-500 hover:text-red-600"><LogOut size={20} /></span>
+            {isSidebarOpen && <span className="ml-3 font-medium">Đăng xuất</span>}
           </button>
         </div>
       </aside>

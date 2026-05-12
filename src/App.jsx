@@ -8,6 +8,7 @@ import AdminPromotionsPage from './pages/admin/AdminPromotionsPage';
 import AdminFoodPage from './pages/admin/AdminFoodPage';
 import AdminCinemaPage from './pages/admin/AdminCinemaPage';
 import AdminMoviePage from './pages/admin/AdminMoviePage';
+import AdminUserPage from './pages/admin/AdminUserPage';
 
 // Layout & Pages
 import MainLayout from './components/layout/MainLayout';
@@ -25,7 +26,7 @@ import MoviesListPage from './pages/public/MoviesListPage';
 import CinemaPage from './pages/public/CinemaPage';
 import CinemaDetailPage from './pages/public/CinemaDetailPage';
 import PromotionDetailPage from './pages/public/PromotionDetailPage';
-
+import ProtectedRoute from './components/layout/ProtectedRoute'; // Thêm dòng này ở trên cùng
 
 
 function App() {
@@ -56,6 +57,11 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Nhóm 3: Dành riêng cho ADMIN (Có Sidebar riêng, tách biệt hoàn toàn) */}
+        <Route path="/admin" element={
+          <ProtectedRoute requireAdmin={true}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }></Route>
         <Route path="/admin" element={<AdminLayout />}>
           {/* Trang mặc định khi vào /admin */}
           <Route index element={<DashboardPage />} />
@@ -65,6 +71,7 @@ function App() {
           <Route path="food" element={<AdminFoodPage />} />
           <Route path="cinemas" element={<AdminCinemaPage />} />
           <Route path="movies" element={<AdminMoviePage />} />
+          <Route path="users" element={<AdminUserPage />} />
         </Route>
       </Routes>
       

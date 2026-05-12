@@ -17,23 +17,35 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const response = await authApi.login(data);
-      // response trả về chính là cái ApiResponse mà mình design ở Backend
-      const { accessToken, ...userData } = response.data;
+      const responseData = response.data || response;
+      const { accessToken, ...userData } = responseData;
       
       setLogin(userData, accessToken);
       toast.success('Đăng nhập thành công!');
       
-      // Tạm thời chuyển về trang chủ (sau này sẽ làm)
-      navigate('/'); 
+      // ✅ BƯỚC GÀI BẪY: Ép hệ thống báo cáo chính xác dữ liệu
+      const currentRole = userData?.role || userData?.roleName || userData?.user?.role || "Không tìm thấy Role";
+      
+      // Bật Pop-up cảnh báo lên màn hình để bạn nhìn thấy ngay lập tức
+      alert(`DỮ LIỆU BÍ MẬT: Quyền của tài khoản này đang là chữ: "${currentRole}"`);
+
+      // Chuyển hướng
+      if (
+        currentRole === 'ADMIN' || currentRole === 'ROLE_ADMIN' || 
+        currentRole === 'STAFF' || currentRole === 'ROLE_STAFF'
+      ) {
+        navigate('/admin'); 
+      } else {
+        navigate('/'); 
+      }
+      
     } catch (error) {
-        // Bắt lỗi từ Backend trả về
-        const errorMsg = error.response?.data?.message || 'Có lỗi xảy ra!';
+        const errorMsg = error.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác!';
         toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-2xl p-8 border border-gray-700">
