@@ -26,8 +26,7 @@ export default function LoginPage() {
       // ✅ BƯỚC GÀI BẪY: Ép hệ thống báo cáo chính xác dữ liệu
       const currentRole = userData?.role || userData?.roleName || userData?.user?.role || "Không tìm thấy Role";
       
-      // Bật Pop-up cảnh báo lên màn hình để bạn nhìn thấy ngay lập tức
-      alert(`DỮ LIỆU BÍ MẬT: Quyền của tài khoản này đang là chữ: "${currentRole}"`);
+      
 
       // Chuyển hướng
       if (

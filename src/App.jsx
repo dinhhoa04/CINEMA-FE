@@ -9,6 +9,7 @@ import AdminFoodPage from './pages/admin/AdminFoodPage';
 import AdminCinemaPage from './pages/admin/AdminCinemaPage';
 import AdminMoviePage from './pages/admin/AdminMoviePage';
 import AdminUserPage from './pages/admin/AdminUserPage';
+import AdminBookingPage from './pages/admin/AdminBookingPage';
 
 // Layout & Pages
 import MainLayout from './components/layout/MainLayout';
@@ -72,6 +73,7 @@ function App() {
           <Route path="cinemas" element={<AdminCinemaPage />} />
           <Route path="movies" element={<AdminMoviePage />} />
           <Route path="users" element={<AdminUserPage />} />
+          <Route path="bookings" element={<AdminBookingPage />} />
         </Route>
       </Routes>
       
