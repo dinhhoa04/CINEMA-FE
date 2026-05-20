@@ -14,6 +14,7 @@ export const userApi = {
     
     createUser: (data) => axiosInstance.post('/users', data),
     updateRole: (userId, roleId) => axiosInstance.patch(`/users/${userId}/role`, { roleId }),
+    updatePermissions: (userId, permissions) => axiosInstance.patch(`/users/${userId}/permissions`, { permissions }), // THÊM MỚI DÒNG NÀY
     toggleLockUser: (id) => axiosInstance.delete(`/users/${id}`),
     resetPassword: (id, newPassword) => axiosInstance.put(`/users/${id}/reset-password`, { newPassword }),
     // Lấy danh sách vé của 1 người dùng cụ thể

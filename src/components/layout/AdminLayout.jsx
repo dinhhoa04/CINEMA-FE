@@ -17,17 +17,28 @@ const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
 
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'ROLE_ADMIN';
+  const perms = user?.permissions || ''; // Lấy chuỗi "MOVIES,FOOD" từ Zustand
+
   const menuItems = [
-    { name: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={20} /> },
-    { name: "Quản lý Rạp & Phòng", path: "/admin/cinemas", icon: <MonitorPlay size={20} /> },
-    // Đã sửa lỗi thiếu dấu đóng thẻ /> ở dòng Film dưới đây:
-    { name: "Quản lý Phim & Lịch", path: "/admin/movies", icon: <Film size={20} /> },
-    { name: "Quản lý Đồ ăn (F&B)", path: "/admin/food", icon: <Popcorn size={20} /> },
-    { name: "Quản lý Khuyến mãi", path: "/admin/promotions", icon: <Tag size={20} /> },
-    { name: "Quản lý Đơn vé", path: "/admin/bookings", icon: <Ticket size={20} /> },
-    { name: "Quản lý Người dùng", path: "/admin/users", icon: <Users size={20} /> },
+    { name: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={20} />, req: 'ALL' },
+    { name: "Quản lý Rạp & Phòng", path: "/admin/cinemas", icon: <MonitorPlay size={20} />, req: 'CINEMAS' },
+    { name: "Quản lý Phim & Lịch", path: "/admin/movies", icon: <Film size={20} />, req: 'MOVIES' },
+    { name: "Quản lý Đồ ăn (F&B)", path: "/admin/food", icon: <Popcorn size={20} />, req: 'FOOD' },
+    { name: "Quản lý Đơn vé", path: "/admin/bookings", icon: <Ticket size={20} />, req: 'BOOKINGS' },
+    // Các menu nhạy cảm dưới đây chỉ Admin mới thấy
+    { name: "Quản lý Khuyến mãi", path: "/admin/promotions", icon: <Tag size={20} />, req: 'ADMIN_ONLY' },
+    { name: "Quản lý Người dùng", path: "/admin/users", icon: <Users size={20} />, req: 'ADMIN_ONLY' },
   ];
 
+  // Lọc Menu: Nếu là Admin -> Hiện hết. Nếu là Staff -> Lọc theo mảng "req"
+  const visibleMenus = menuItems.filter(item => {
+    if (isAdmin) return true; 
+    if (item.req === 'ALL') return true; 
+    if (item.req === 'ADMIN_ONLY') return false;
+    return perms.includes(item.req);
+  });
   return (
     <div className="flex h-screen bg-gray-100 text-gray-800 font-sans">
       <aside className={`${isSidebarOpen ? "w-64" : "w-20"} bg-white shadow-xl transition-all duration-300 flex flex-col`}>
@@ -38,7 +49,7 @@ const AdminLayout = () => {
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-2 px-3">
-            {menuItems.map((item, index) => {
+            {visibleMenus.map((item, index) => {
               const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
               return (
                 <li key={index}>

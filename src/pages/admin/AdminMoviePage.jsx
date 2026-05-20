@@ -32,6 +32,8 @@ const AVAILABLE_GENRES = [
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+
+  
   // --- FORMS ---
   const [movieForm, setMovieForm] = useState({
     title: '', slug: '', duration: '', releaseDate: '', status: 'NOW_SHOWING',
@@ -115,13 +117,25 @@ const AVAILABLE_GENRES = [
     } catch (err) { alert("Lỗi lưu Lịch chiếu!"); }
   };
 
+  // Đã cập nhật text để phù hợp với logic Soft Delete
   const handleDelete = async (id, type) => {
-    if (window.confirm("Bạn có chắc muốn xóa dữ liệu này?")) {
+    const confirmMessage = type === 'movie' 
+      ? "Bạn có chắc muốn NGỪNG CHIẾU và đưa phim này vào kho lưu trữ? (Dữ liệu doanh thu vẫn sẽ được bảo toàn)"
+      : "Bạn có chắc muốn xóa lịch chiếu này?";
+
+    if (window.confirm(confirmMessage)) {
       try {
-        if (type === 'movie') await movieApi.deleteMovie(id);
-        else await showtimeApi.deleteShowtime(id);
+        if (type === 'movie') {
+          await movieApi.deleteMovie(id);
+          alert("Đã ngừng chiếu phim thành công!");
+        } else {
+          await showtimeApi.deleteShowtime(id);
+          alert("Đã xóa lịch chiếu!");
+        }
         fetchData();
-      } catch (err) { alert("Lỗi xóa! Có thể dữ liệu đang bị ràng buộc."); }
+      } catch (err) { 
+        alert("Lỗi thao tác! Có thể dữ liệu đang bị ràng buộc."); 
+      }
     }
   };
 

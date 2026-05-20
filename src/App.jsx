@@ -58,9 +58,16 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* Cách viết tạm thời để bypass qua lớp bảo vệ để check giao diện biểu đồ */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboardPage />} /> {/* Hiện biểu đồ */}
+        {/* SỬA LỖI: Bọc AdminLayout bằng ProtectedRoute để chặn khách hàng */}
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboardPage />} /> 
           <Route path="promotions" element={<AdminPromotionsPage />} />
           <Route path="food" element={<AdminFoodPage />} />
           <Route path="cinemas" element={<AdminCinemaPage />} />

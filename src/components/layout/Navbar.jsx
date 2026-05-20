@@ -52,13 +52,20 @@ export default function Navbar() {
           
           {isAuthenticated ? (
             <div className="hidden md:flex items-center space-x-4">
-              {/* Nút Profile xịn xò có Avatar */}
-              <Link to="/profile" className="text-lg hover:text-primary transition-colors cursor-pointer flex items-center gap-2">
-                <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold text-white">
-                  {user?.fullName?.charAt(0).toUpperCase()}
-                </div>
-                <span>Chào, <span className="text-accent font-medium">{user?.fullName}</span></span>
-              </Link>
+              
+              {/* KIỂM TRA ROLE: Nếu là Admin hoặc Staff thì hiện nút "Trang Quản trị", ngược lại hiện "Profile" */}
+              {user?.role === 'ADMIN' || user?.role === 'ROLE_ADMIN' || user?.role === 'STAFF' || user?.role === 'ROLE_STAFF' ? (
+                <Link to="/admin" className="px-5 py-2 text-sm font-bold bg-red-600 hover:bg-red-700 text-white rounded-full transition-all flex items-center gap-2">
+                  <i className="fas fa-shield-alt"></i> Vào trang Quản trị
+                </Link>
+              ) : (
+                <Link to="/profile" className="text-lg hover:text-primary transition-colors cursor-pointer flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-inner">
+                    {user?.fullName?.charAt(0).toUpperCase()}
+                  </div>
+                  <span>Chào, <span className="text-accent font-medium">{user?.fullName}</span></span>
+                </Link>
+              )}
               
               {/* Nút Đăng xuất */}
               <button onClick={handleLogout} className="px-6 py-2.5 text-lg font-medium bg-card hover:bg-primary rounded-full transition-all">

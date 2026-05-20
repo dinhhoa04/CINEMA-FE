@@ -17,8 +17,10 @@ export default function AdminUserPage() {
   const [modals, setModals] = useState({ add: false, detail: false, role: false, reset: false });
   const [selectedUser, setSelectedUser] = useState(null);
 
-
+  // State lưu trữ các quyền đang được chọn trong Modal
+  const [selectedPerms, setSelectedPerms] = useState([]);
   const [userBookings, setUserBookings] = useState([]);
+  
   // Dữ liệu Form
   const [newPassword, setNewPassword] = useState('');
   const [newUser, setNewUser] = useState({
@@ -28,19 +30,15 @@ export default function AdminUserPage() {
   // ==========================================
   // 2. LẤY DỮ LIỆU TỪ BACKEND
   // ==========================================
-  // ==========================================
-  // 2. LẤY DỮ LIỆU TỪ BACKEND (PHIÊN BẢN SIÊU AN TOÀN)
-  // ==========================================
   const fetchData = async () => {
     try {
       const [userRes, roleRes] = await Promise.all([userApi.getAllUsers(), userApi.getRoles()]);
       
-      // Hàm nội bộ giúp móc dữ liệu ra bất chấp Backend trả về cấu trúc gì
       const extractData = (res) => {
         if (!res) return [];
-        if (Array.isArray(res)) return res; // Nếu là mảng trực tiếp
-        if (res.data && Array.isArray(res.data)) return res.data; // Nếu nằm trong ApiResponse.data
-        if (res.data?.data && Array.isArray(res.data.data)) return res.data.data; // Nếu bị bọc 2 lớp
+        if (Array.isArray(res)) return res; 
+        if (res.data && Array.isArray(res.data)) return res.data; 
+        if (res.data?.data && Array.isArray(res.data.data)) return res.data.data; 
         return [];
       };
 
@@ -50,7 +48,6 @@ export default function AdminUserPage() {
       setUsers(fetchedUsers);
       setRoles(fetchedRoles);
       
-      console.log("Đã tải xong Users:", fetchedUsers); // In ra console để theo dõi
     } catch (error) {
       toast.error('Lỗi kết nối. Hãy xem tab Console (F12)!');
       console.error("CHI TIẾT LỖI API:", error);
@@ -68,7 +65,7 @@ export default function AdminUserPage() {
     if (user) setSelectedUser(user);
     if (modalName === 'reset') setNewPassword('');
     
-    // --- ĐOẠN MỚI THÊM: Nếu mở modal Chi tiết thì gọi API lấy vé ---
+    // Nếu mở modal Chi tiết -> gọi API lấy vé
     if (modalName === 'detail' && user) {
        try {
           const res = await userApi.getUserBookings(user.id);
@@ -78,7 +75,11 @@ export default function AdminUserPage() {
           setUserBookings([]);
        }
     }
-    // -------------------------------------------------------------
+
+    // Nếu mở modal Phân quyền -> Đọc chuỗi permissions từ user và tách thành mảng
+    if (modalName === 'role' && user) {
+      setSelectedPerms(user.permissions ? user.permissions.split(',') : []);
+    }
 
     setModals({ ...modals, [modalName]: true });
   };
@@ -110,13 +111,17 @@ export default function AdminUserPage() {
     } catch (error) { toast.error(error.response?.data?.message || 'Lỗi thêm mới!'); }
   };
 
-  const handleChangeRole = async (roleId) => {
+  // Cập nhật Quyền (Permissions) thay vì đổi Role
+  const handleUpdatePermissions = async () => {
     try {
-      await userApi.updateRole(selectedUser.id, roleId);
-      toast.success('Cập nhật quyền thành công!');
+      // Nối mảng quyền thành chuỗi (VD: "MOVIES,FOOD") và gửi xuống Backend
+      await userApi.updatePermissions(selectedUser.id, selectedPerms.join(','));
+      toast.success('Cập nhật chức năng thành công!');
       closeModal('role');
       fetchData();
-    } catch (error) { toast.error('Lỗi cập nhật!'); }
+    } catch (error) { 
+      toast.error('Lỗi cập nhật chức năng!'); 
+    }
   };
 
   const handleResetPassword = async () => {
@@ -132,7 +137,10 @@ export default function AdminUserPage() {
   // 4. LỌC DỮ LIỆU HIỂN THỊ
   // ==========================================
   const customerList = users.filter(u => u.roleName === 'CUSTOMER' || !u.roleName);
-  const staffList = users.filter(u => u.roleName === 'STAFF' || u.roleName === 'ADMIN');
+  
+  // ĐÃ SỬA LỖI: Lọc chỉ lấy nhân viên STAFF, giấu luôn System Admin đi để không ai can thiệp được
+  const staffList = users.filter(u => u.roleName === 'STAFF');
+
   const currentData = (activeTab === 'customers' ? customerList : staffList).filter(user =>
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,7 +153,7 @@ export default function AdminUserPage() {
   return (
     <div className="space-y-6 relative pb-10">
       
-      {/* HEADER VỚI KÍCH THƯỚC LỚN GIÚP DỄ QUAN SÁT VÀ THAO TÁC */}
+      {/* HEADER */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Quản lý Hệ thống</h1>
@@ -172,7 +180,7 @@ export default function AdminUserPage() {
         </button>
       </div>
 
-      {/* THANH TÌM KIẾM & BỘ LỌC */}
+      {/* THANH TÌM KIẾM */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center">
         <div className="relative flex-1 min-w-[250px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -216,7 +224,7 @@ export default function AdminUserPage() {
                     </td>
                   )}
                   <td className="p-4 flex justify-center gap-2">
-                    <butt on title="Xem chi tiết" onClick={() => openModal('detail', user)} className="text-blue-500 bg-blue-50 p-2 rounded hover:text-white hover:bg-blue-500"><Eye size={18} /></butt>
+                    <button title="Xem chi tiết" onClick={() => openModal('detail', user)} className="text-blue-500 bg-blue-50 p-2 rounded hover:text-white hover:bg-blue-500"><Eye size={18} /></button>
                     {activeTab === 'staffs' && (
                       <button title="Phân quyền" onClick={() => openModal('role', user)} className="text-purple-600 bg-purple-50 p-2 rounded hover:text-white hover:bg-purple-600"><ShieldAlert size={18} /></button>
                     )}
@@ -256,10 +264,14 @@ export default function AdminUserPage() {
                   <option value="MALE">Nam</option><option value="FEMALE">Nữ</option><option value="OTHER">Khác</option>
                 </select>
               </div>
-              <div className="col-span-2"><label className="text-sm font-bold text-gray-700">Cấp quyền (Vai trò) *</label>
+              <div className="col-span-2">
+                <label className="text-sm font-bold text-gray-700">Cấp quyền (Vai trò) *</label>
                 <select onChange={e => setNewUser({...newUser, roleId: e.target.value})} className="w-full border p-2 rounded mt-1 outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">-- Chọn vai trò --</option>
-                  {roles.map(r => <option key={r.id} value={r.id}>{r.name} - {r.description}</option>)}
+                  {/* ĐÃ FIX: Lọc bỏ ADMIN, chỉ cho phép tạo STAFF hoặc CUSTOMER */}
+                  {roles.filter(r => r.name !== 'ADMIN').map(r => (
+                    <option key={r.id} value={r.id}>{r.name} - {r.description}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -317,22 +329,46 @@ export default function AdminUserPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold flex items-center gap-2 text-purple-700"><ShieldAlert/> Cấp quyền hệ thống</h2>
+              <h2 className="text-xl font-bold flex items-center gap-2 text-purple-700"><ShieldAlert/> Phân công chức năng</h2>
               <button onClick={() => closeModal('role')} className="text-gray-400 hover:text-red-500"><X/></button>
             </div>
             <p className="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg border">
-              Chọn chức năng làm việc mới cho <strong className="text-gray-900">{selectedUser?.fullName}</strong> ({selectedUser?.email}):
+              Chọn công việc mà <strong className="text-gray-900">{selectedUser?.fullName}</strong> được phép quản lý:
             </p>
+            
             <div className="space-y-3">
-              {roles.map(r => (
-                <button key={r.id} onClick={() => handleChangeRole(r.id)} className={`w-full p-4 border-2 rounded-xl text-left transition-all flex items-center justify-between group ${selectedUser?.roleName === r.name ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'}`}>
-                  <div>
-                    <p className={`font-bold ${selectedUser?.roleName === r.name ? 'text-purple-700' : 'text-gray-800'}`}>{r.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">{r.description || 'Chưa có mô tả chi tiết'}</p>
-                  </div>
-                  <Shield className={selectedUser?.roleName === r.name ? 'text-purple-600' : 'text-gray-300 group-hover:text-purple-400'} size={24}/>
-                </button>
-              ))}
+              {[
+                { id: 'MOVIES', name: 'Quản lý Phim & Lịch chiếu', desc: 'Xem, thêm, sửa phim và lịch chiếu' },
+                { id: 'FOOD', name: 'Quản lý Đồ ăn (F&B)', desc: 'Bật/tắt các món bắp nước' },
+                { id: 'BOOKINGS', name: 'Quản lý Đơn vé', desc: 'Xem danh sách và Soát vé (Check-in)' },
+                { id: 'CINEMAS', name: 'Quản lý Rạp & Phòng', desc: 'Chỉnh sửa phòng chiếu, sơ đồ ghế' }
+              ].map(perm => {
+                const isChecked = selectedPerms.includes(perm.id);
+                return (
+                  <label key={perm.id} className={`w-full p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center justify-between group ${isChecked ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'}`}>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedPerms([...selectedPerms, perm.id]);
+                          else setSelectedPerms(selectedPerms.filter(p => p !== perm.id));
+                        }}
+                      />
+                      <div>
+                        <p className={`font-bold ${isChecked ? 'text-purple-700' : 'text-gray-800'}`}>{perm.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{perm.desc}</p>
+                      </div>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
+              <button onClick={() => closeModal('role')} className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded hover:bg-gray-200">Hủy</button>
+              <button onClick={handleUpdatePermissions} className="px-6 py-2 bg-purple-600 text-white font-bold rounded hover:bg-purple-700 shadow">Lưu phân công</button>
             </div>
           </div>
         </div>
