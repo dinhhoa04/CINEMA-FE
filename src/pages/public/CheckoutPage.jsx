@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Monitor, Ticket, Popcorn, User, CreditCard } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore'; 
 import { bookingApi } from '../../api/bookingApi';
-import { promotionApi } from '../../api/promotionApi'; // Import API khuyến mãi
+import { promotionApi } from '../../api/promotionApi'; // Import API khuyến mãi\
+import { paymentApi } from '../../api/paymentApi';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -57,11 +58,33 @@ export default function CheckoutPage() {
     }
   };
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
+// Hàm xử lý khi bấm "Thanh toán MoMo"
+const handleMomoPayment = async () => {
+    if (!booking?.bookingCode) {
+        toast.error('Không tìm thấy mã đặt vé!');
+        return;
+    }
+    setIsProcessing(true);
+    try {
+        const res = await paymentApi.createMomoPayment(booking.bookingCode);
+        const payUrl = res.data; // URL trang MoMo
+
+        // Redirect sang trang MoMo để thanh toán
+        window.location.href = payUrl;
+
+    } catch (err) {
+        toast.error(err.response?.data?.message || 'Không thể kết nối MoMo!');
+        setIsProcessing(false);
+    }
+};
+
   // Tính toán số tiền cuối cùng khách phải trả
   const finalTotalToPay = finalTotal - discountAmount;
   const displayTotal = finalTotalToPay > 0 ? finalTotalToPay : 0;
 
-  // --- HÀM THANH TOÁN ---
+  // --- HÀM THANH TOÁN (GỘP CHUNG) ---
   const handlePayment = async (e) => {
     e.preventDefault(); 
     if (!user) {
@@ -70,29 +93,33 @@ export default function CheckoutPage() {
       return;
     }
 
+    setIsProcessing(true); // Bắt đầu hiệu ứng loading
     try {
+      // 1. Gửi dữ liệu xuống DB để tạo Booking
       const requestData = {
         showtimeId: showtimeId,
         seatIds: selectedSeats.map(seat => seat.seatId),
         cart: cart, 
-        finalTotal: displayTotal, // Gửi số tiền ĐÃ TRỪ KHUYẾN MÃI xuống BE
-        promoCode: discountAmount > 0 ? promoCode : null // Gửi kèm mã để BE lưu lịch sử (nếu có xài)
+        finalTotal: displayTotal,
+        promoCode: discountAmount > 0 ? promoCode : null
       };
 
-      const response = await bookingApi.createBooking(requestData);
-      const bookingCode = response.data; 
+      const bookingRes = await bookingApi.createBooking(requestData);
+      const bookingCode = bookingRes.data; // Đây là mã từ Backend trả về
 
-      navigate('/payment-success', { 
-        state: { 
-          bookingCode: bookingCode,
-          movieTitle: showtimeInfo.movieTitle,
-          cinemaName: showtimeInfo.cinemaName
-        } 
-      });
+      // 2. Dùng mã bookingCode vừa lấy được để xin link MoMo
+      const momoRes = await paymentApi.createMomoPayment(bookingCode);
+      const payUrl = momoRes.data;
+
+      // 3. Chuyển hướng sang MoMo
+      if (payUrl) {
+          window.location.href = payUrl;
+      }
 
     } catch (error) {
       console.error("Lỗi đặt vé:", error);
-      alert("Có lỗi xảy ra trong quá trình thanh toán!");
+      alert("Có lỗi xảy ra: " + (error.response?.data?.message || "Vui lòng thử lại sau"));
+      setIsProcessing(false); // Tắt hiệu ứng nếu lỗi
     }
   };
 
@@ -297,12 +324,32 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              <button 
-                onClick={handlePayment}
-                className="w-full py-4 rounded-xl flex items-center justify-center gap-2 font-black transition-all duration-300 bg-primary text-white shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:bg-red-700 hover:scale-[1.02]"
-              >
-                <CreditCard className="w-5 h-5 flex-shrink-0" /> THANH TOÁN NGAY
-              </button>
+              <button
+    onClick={handlePayment}
+    disabled={isProcessing}
+    className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 font-black text-lg
+        transition-all duration-300
+        ${isProcessing
+            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+            : 'bg-[#ae2070] hover:bg-[#962060] text-white shadow-[0_0_20px_rgba(174,32,112,0.5)] hover:scale-[1.02]'
+        }`}
+>
+    {isProcessing ? (
+        <>
+            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            Đang kết nối MoMo...
+        </>
+    ) : (
+        <>
+            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
+                 alt="MoMo" className="w-8 h-8 rounded-full" />
+            THANH TOÁN QUA MOMO
+        </>
+    )}
+</button>
             </div>
           </div>
 

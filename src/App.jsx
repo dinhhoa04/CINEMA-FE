@@ -29,6 +29,8 @@ import CinemaPage from './pages/public/CinemaPage';
 import CinemaDetailPage from './pages/public/CinemaDetailPage';
 import PromotionDetailPage from './pages/public/PromotionDetailPage';
 import ProtectedRoute from './components/layout/ProtectedRoute'; // Thêm dòng này ở trên cùng
+import PaymentResultPage from './pages/public/PaymentResultPage';
+
 
 
 function App() {
@@ -51,6 +53,7 @@ function App() {
   <Route path="/cinemas" element={<CinemaPage />} />
   <Route path="/cinemas/:id" element={<CinemaDetailPage />} />
   <Route path="/promotions/:id" element={<PromotionDetailPage />} />
+  <Route path="/payment/result" element={<PaymentResultPage />} />
   
 </Route>
 
