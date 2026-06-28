@@ -4,8 +4,7 @@ A fullstack cinema platform supporting multi-role users, deployed on a live Linu
 
 ## 📸 Screenshots & Demo
 * **Live Demo:** [http://cinemabookcdh.duckdns.org/](http://cinemabookcdh.duckdns.org/)[cite: 1]
-*(Note: You can drop your web screenshots directly here on GitHub editor to display them)*
-
+<img width="1899" height="1028" alt="image" src="https://github.com/user-attachments/assets/80738bcd-e890-4542-98d7-ae28814cdf74" />
 ## 🚀 Key Features
 - **Security & Authentication:** JWT-based authentication with Role-Based Access Control (Admin, Staff, Customer) via Spring Security filters[cite: 1].
 - **Booking & Check-in:** End-to-end ticket booking workflow covering seat selection, food combo choices, and real-time check-in status for staff[cite: 1].
