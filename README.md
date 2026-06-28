@@ -31,7 +31,7 @@ A fullstack cinema platform supporting multi-role users, deployed on a live Linu
 
 ### Backend
 1. Clone the repository: `git clone https://github.com/dinhhoa04/cinema-be.git`
-2. Update database configurations in `application.properties`.
+2. Update database configurations in `application.yaml`.
 3. Build and run the application using Maven or IntelliJ IDEA.
 
 ### Frontend
