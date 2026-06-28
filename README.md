@@ -1,16 +1,31 @@
-# React + Vite
+# CineBook – Cinema Booking & Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fullstack cinema platform supporting multi-role users, deployed on a live Linux VPS with Docker and Nginx[cite: 1].
 
-Currently, two official plugins are available:
+## 📸 Screenshots & Demo
+* **Live Demo:** [http://cinemabookcdh.duckdns.org/](http://cinemabookcdh.duckdns.org/)[cite: 1]
+*(Note: You can drop your web screenshots directly here on GitHub editor to display them)*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Key Features
+- **Security & Authentication:** JWT-based authentication with Role-Based Access Control (Admin, Staff, Customer) via Spring Security filters[cite: 1].
+- **Booking & Check-in:** End-to-end ticket booking workflow covering seat selection, food combo choices, and real-time check-in status for staff[cite: 1].
+- **Admin Dashboard:** Real-time admin dashboard with Recharts, backed by optimized SQL aggregates reducing report query time by ~40%[cite: 1].
+- **Deployment:** Packaged using Docker containers and deployed onto a live Linux VPS with Nginx configured as a reverse proxy[cite: 1].
 
-## React Compiler
+## 🛠️ Tech Stack
+- **Backend:** Java, Spring Boot, Spring Security, JWT, Hibernate/JPA, RESTful API[cite: 1]
+- **Frontend:** ReactJS, JavaScript, HTML/CSS, Bootstrap 5, Axios[cite: 1]
+- **Database:** MySQL[cite: 1]
+- **DevOps & Tools:** Docker, Nginx, Git, Postman, Maven[cite: 1]
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 💻 How to Run Locally
 
-## Expanding the ESLint configuration
+### Backend
+1. Clone the repository: `git clone https://github.com/dinhhoa04/cinema-be.git`[cite: 1]
+2. Update database configurations in `application.properties`.
+3. Build and run the application using Maven or IntelliJ IDEA[cite: 1].
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Frontend
+1. Clone the repository: `git clone https://github.com/dinhhoa04/cinema-fe.git`[cite: 1]
+2. Install dependencies: `npm install`
+3. Start the development server: `npm start`
