@@ -4,7 +4,13 @@ A fullstack cinema platform supporting multi-role users, deployed on a live Linu
 
 ## 📸 Screenshots & Demo
 * **Live Demo:** [http://cinemabookcdh.duckdns.org/](http://cinemabookcdh.duckdns.org/)[cite: 1]
-<img width="1899" height="1028" alt="image" src="https://github.com/user-attachments/assets/80738bcd-e890-4542-98d7-ae28814cdf74" />
+<img width="1903" height="1035" alt="image" src="https://github.com/user-attachments/assets/097aa060-4e97-4ee8-80e0-18d0653016e4" />
+<img width="1887" height="1025" alt="image" src="https://github.com/user-attachments/assets/06695280-d85b-4a6c-8f6c-17bc7fdd8bed" />
+<img width="1887" height="1022" alt="image" src="https://github.com/user-attachments/assets/135b6d88-f9bc-42f0-a7b0-b1b6bf43a7ac" />
+<img width="1522" height="999" alt="image" src="https://github.com/user-attachments/assets/63633e06-9078-4800-a5d6-01f56328fea2" />
+<img width="1903" height="1027" alt="image" src="https://github.com/user-attachments/assets/cfce0c02-5305-4f30-becb-039713960401" />
+
+
 ## 🚀 Key Features
 - **Security & Authentication:** JWT-based authentication with Role-Based Access Control (Admin, Staff, Customer) via Spring Security filters[cite: 1].
 - **Booking & Check-in:** End-to-end ticket booking workflow covering seat selection, food combo choices, and real-time check-in status for staff[cite: 1].
